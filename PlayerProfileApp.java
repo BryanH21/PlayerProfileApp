@@ -22,35 +22,6 @@ import javax.imageio.ImageIO;
  */
 public class PlayerProfileApp extends JFrame 
 {
-    // UI Theme constants (To be changed to business colors in the future)
-    static final class Theme
-    {
-        private Theme() {}
-        public static final Color DARK_BG = new Color(20, 24, 33);
-        public static final Color CARD_BG = new Color(28, 36, 51);
-        public static final Color CARD_BORDER = new Color(50, 60, 78);
-        public static final Color NAV_BG = new Color(16, 19, 27);
-        public static final Color GOLD = new Color(255, 215, 0);
-        public static final Color TEXT = Color.WHITE;
-        public static final Color SUBTEXT = new Color(180, 187, 196);
-        public static final Color TRACK = new Color(70, 79, 99);
-        public static final Color BUTTON_BG = new Color(28, 36, 51);
-        public static final int  SPACING_XS = 6;
-        public static final int  SPACING_SM = 8;
-        public static final float GAUGE_STROKE = 6f;
-    }
-
-    // UI helpers
-    static final class UiColors
-    {
-        private UiColors() {}
-        public static Color colorForValue(int v)
-        {
-            if (v >= 80) return new Color(86, 201, 72);
-            if (v >= 60) return new Color(230, 189, 71);
-            return new Color(221, 85, 85);
-        }
-    }
     private final CardLayout cardLayout = new CardLayout();
     private final JPanel pages = new JPanel(cardLayout);
 
@@ -75,10 +46,8 @@ public class PlayerProfileApp extends JFrame
         // PAGES
         JPanel homePage = new HomePage(player);
         JPanel roadmapPage = placeholderPage("Roadmap (coming next)"); 
-        JPanel logPage = placeholderPage("Training Log (coming next)"); //deleting later.. I am changing some things around
         pages.add(homePage, "HOME");
         pages.add(roadmapPage, "ROADMAP");
-        pages.add(logPage, "LOG");
         add(pages, BorderLayout.CENTER);
 
         // NAV BAR
@@ -339,59 +308,59 @@ public class PlayerProfileApp extends JFrame
     static class BottomNav extends JPanel 
     {
         private final JButton btnHome = roundButton("Home");
-        private final JButton btnLeft = new JButton("Roadmap");
-        private final JButton btnRight = new JButton("Log");
+        private final JButton btnRoadmap = roundButton("Roadmap");
 
         public BottomNav(String initial, java.util.function.Consumer<String> onSelect) 
         {
-            setLayout(new BorderLayout());
             setBackground(Theme.NAV_BG);
             setBorder(new EmptyBorder(10, 18, 16, 18));
-            JPanel leftRight = new JPanel(new BorderLayout());
-            leftRight.setOpaque(false);
-            styleFlat(btnLeft);
-            styleFlat(btnRight);
-            btnLeft.addActionListener(e -> onSelect.accept("ROADMAP"));
-            btnRight.addActionListener(e -> onSelect.accept("LOG"));
-            leftRight.add(btnLeft, BorderLayout.WEST);
-            leftRight.add(btnRight, BorderLayout.EAST);
+            setLayout(new GridLayout(1, 2, 20, 0));
+
+            btnRoadmap.addActionListener(e -> onSelect.accept("ROADMAP"));
             btnHome.addActionListener(e -> onSelect.accept("HOME"));
-            add(leftRight, BorderLayout.NORTH);
-            JPanel centerDot = new JPanel();
-            centerDot.setOpaque(false);
-            centerDot.add(btnHome);
-            add(centerDot, BorderLayout.CENTER);
+
+            add(btnRoadmap);
+            add(btnHome);
         }
-        private static void styleFlat(JButton b) 
-        {
-            b.setFocusPainted(false);
-            b.setForeground(Theme.TEXT);
-            b.setBackground(Theme.BUTTON_BG);
-            b.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
-        }
+
         private static JButton roundButton(String text) 
         {
             JButton b = new JButton(text) 
             {
                 @Override public void paintComponent(Graphics g) 
                 {
-                    // Omit super.paintComponent(g); I rendered the full oval background intentionally
+                    // Omit super.paintComponent(g); painting full oval background intentionally
                     Graphics2D g2 = (Graphics2D) g.create();
                     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     int w = getWidth(), h = getHeight();
+                    int d = Math.min(w, h);
+
+                    // outer ring
                     g2.setColor(Theme.GOLD);
-                    g2.fillOval(0, 0, w, h);
+                    g2.fillOval(0, 0, d, d);
+
+                    // inner fill
                     g2.setColor(Theme.BUTTON_BG);
-                    g2.fillOval(4, 4, w-8, h-8);
+                    g2.fillOval(4, 4, d - 8, d - 8);
+
+                    // label
                     g2.setColor(Theme.TEXT);
-                    FontMetrics fm = g2.getFontMetrics(getFont().deriveFont(Font.BOLD, 13f));
+                    Font f = getFont().deriveFont(Font.BOLD, 13f);
+                    g2.setFont(f);
+                    FontMetrics fm = g2.getFontMetrics(f);
                     String s = getText();
-                    int tx = (w - fm.stringWidth(s))/2;
-                    int ty = (h + fm.getAscent())/2 - 2;
-                    g2.setFont(getFont().deriveFont(Font.BOLD, 13f));
+                    int tx = (d - fm.stringWidth(s)) / 2;
+                    int ty = (d + fm.getAscent()) / 2 - 2;
                     g2.drawString(s, tx, ty);
+
                     g2.dispose();
                 }
+
+                @Override public Dimension getPreferredSize()
+                {
+                    return new Dimension(92, 92);
+                }
+
                 @Override public boolean contains(int x, int y) 
                 {
                     int r = Math.min(getWidth(), getHeight())/2;
@@ -400,7 +369,6 @@ public class PlayerProfileApp extends JFrame
                     return dx*dx + dy*dy <= r*r;
                 }
             };
-            b.setPreferredSize(new Dimension(92, 92));
             b.setContentAreaFilled(false);
             b.setFocusPainted(false);
             b.setBorderPainted(false);
@@ -408,44 +376,6 @@ public class PlayerProfileApp extends JFrame
             b.setBackground(Theme.BUTTON_BG);
             return b;
         }
-    }
-
-    // Model 
-    static class Player 
-    {
-        final String name;
-        final String photoPath; // may be null
-        final List<StatCategory> categories;
-
-        Player(String name, String photoPath, List<StatCategory> categories) 
-        {
-            this.name = name;
-            this.photoPath = photoPath;
-            this.categories = categories;
-        }
-        String getDisplayInitials() 
-        {
-            String[] parts = name.trim().split("\\s+");
-            String a = parts.length > 0 ? parts[0].substring(0,1) : "P";
-            String b = parts.length > 1 ? parts[1].substring(0,1) : "";
-            return (a + b).toUpperCase();
-        }
-        String getPhotoPath() { return photoPath; }
-    }
-    static class StatCategory
-    {
-        final String name;
-        final int overall;               // 0..99
-        final List<SubStat> subStats;   
-        StatCategory(String name, int overall, List<SubStat> subStats) 
-        {
-            this.name = name; this.overall = overall; this.subStats = subStats;
-        }
-    }
-    static class SubStat 
-    {
-        final String name; final int value;
-        SubStat(String name, int value) { this.name = name; this.value = value; }
     }
 
     // Sample Data (replace later with real player) 
