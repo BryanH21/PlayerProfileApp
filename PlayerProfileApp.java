@@ -18,11 +18,11 @@ import javax.imageio.ImageIO;
  * PlayerProfileApp
  * Focus: Home Page (mobile style)
  * Shows: circular profile photo, name, scrollable stat categories with sub stats, bottom nav
- * Next steps (later): wire Roadmap + Training Log pages
+ * Next steps (later): Roadmap and split up program files
  */
 public class PlayerProfileApp extends JFrame 
 {
-    // UI Theme constants
+    // UI Theme constants (To be changed to business colors in the future)
     static final class Theme
     {
         private Theme() {}
@@ -74,9 +74,8 @@ public class PlayerProfileApp extends JFrame
         Player player = samplePlayer();
         // PAGES
         JPanel homePage = new HomePage(player);
-        JPanel roadmapPage = placeholderPage("Roadmap (coming next)");
-        JPanel logPage = placeholderPage("Training Log (coming next)");
-
+        JPanel roadmapPage = placeholderPage("Roadmap (coming next)"); 
+        JPanel logPage = placeholderPage("Training Log (coming next)"); //deleting later.. I am changing some things around
         pages.add(homePage, "HOME");
         pages.add(roadmapPage, "ROADMAP");
         pages.add(logPage, "LOG");
