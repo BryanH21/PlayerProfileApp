@@ -28,6 +28,11 @@ class Player
         return (a + b).toUpperCase();
     }
     public String getPhotoPath() { return photoPath; }
+    // Overloaded constructor (Chapter 4)
+    Player(String name) 
+    {
+    this(name, null, new java.util.ArrayList<StatCategory>());
+}
 }
 
 /*

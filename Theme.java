@@ -31,6 +31,11 @@ public final class Theme
     public static final int  SPACING_XS = 6;
     public static final int  SPACING_SM = 8;
     public static final float GAUGE_STROKE = 6f;
+    public static final class Spacing 
+    {
+        public static final int XS = 6, SM = 8, MD = 12, LG = 16;
+        private Spacing() {}
+    }
 }
 
 /**
@@ -259,19 +264,25 @@ class StatCard extends JPanel
         if (input == null) return; // cancelled
 
         input = input.trim();
-        int newVal;
-        try
-        {
-            newVal = Integer.parseInt(input);
-        }
-        catch (NumberFormatException ex)
-        {
-            JOptionPane.showMessageDialog(this, "Please enter a whole number.", "Invalid Input", JOptionPane.ERROR_MESSAGE);
+        if (input.length() == 0) {
+            JOptionPane.showMessageDialog(this, "Value cannot be empty.", "Invalid Input", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        if (newVal < 0 || newVal > 100)
-        {
-            JOptionPane.showMessageDialog(this, "Value must be between 0 and 100.", "Out of Range", JOptionPane.ERROR_MESSAGE);
+
+        int newVal;
+        try {
+            newVal = Integer.parseInt(input);
+            // Nested if (Chapter 5)
+            if (newVal < 0 || newVal > 100) {
+                if (newVal < 0) {
+                    JOptionPane.showMessageDialog(this, "Too low (must be ≥ 0).", "Out of Range", JOptionPane.ERROR_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this, "Too high (must be ≤ 100).", "Out of Range", JOptionPane.ERROR_MESSAGE);
+                }
+                return;
+            }
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Please enter a whole number.", "Invalid Input", JOptionPane.ERROR_MESSAGE);
             return;
         }
 

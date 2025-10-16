@@ -58,7 +58,9 @@ public class PlayerProfileApp extends JFrame
         try {
             System.out.println("[UI] Building pages...");
             JPanel homePage = new HomePage(player);
-            JPanel roadmapPage = placeholderPage("Roadmap (coming next)");
+            java.util.List<Goal> goals = RoadmapPage.sampleGoals();
+            int[][] sessions = RoadmapPage.sampleSessions();
+            JPanel roadmapPage = new RoadmapPage(goals, sessions);
             pages.add(homePage, "HOME");
             pages.add(roadmapPage, "ROADMAP");
             add(pages, BorderLayout.CENTER);
