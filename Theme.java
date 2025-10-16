@@ -1,13 +1,18 @@
 //Bryan Hernandez
-//UI color palette and styling constriants
+//UI color palette and styling constriants, shared UI components
 
-import java.awt.Color;
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.awt.geom.Ellipse2D;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Contains all theme related constants and UI helper methods 
  */
-
-
 
 public final class Theme 
 {
@@ -40,3 +45,239 @@ public final class Theme
         return new Color(221,85,85); // red
     }
  }
+
+
+ /** Circular photo/initials with gold ring */
+class Avatar extends JComponent
+{
+    private final String initials;
+    private BufferedImage image;
+
+    Avatar(String initials, String imagePath)
+    {
+        this.initials = initials;
+        setPreferredSize(new Dimension(128, 128));
+        if (imagePath != null)
+        {
+            try { image = ImageIO.read(new File(imagePath)); }
+            catch (IOException ex) { System.err.println("Avatar load failed: " + imagePath + " (" + ex.getMessage() + ")"); }
+        }
+        if (image == null)
+        {
+            try {
+                java.io.InputStream in = getClass().getResourceAsStream("/profile.jpg");
+                if (in != null) image = ImageIO.read(in);
+            } catch (IOException ex) {
+                System.err.println("Resource avatar load failed: " + ex.getMessage());
+            }
+        }
+    }
+
+    @Override protected void paintComponent(Graphics g)
+    {
+        Graphics2D g2 = (Graphics2D) g.create();
+        int size = Math.min(getWidth(), getHeight());
+        int x = (getWidth() - size) / 2;
+        int y = (getHeight() - size) / 2;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setColor(Theme.GOLD);
+        g2.fillOval(x, y, size, size);
+        int inset = 6;
+        Shape clip = new Ellipse2D.Float(x + inset, y + inset, size - 2*inset, size - 2*inset);
+        g2.setClip(clip);
+        if (image != null)
+        {
+            g2.drawImage(image, x + inset, y + inset, size - 2*inset, size - 2*inset, null);
+        }
+        else
+        {
+            g2.setColor(new Color(35, 41, 54));
+            g2.fillOval(x + inset, y + inset, size - 2*inset, size - 2*inset);
+            g2.setClip(null);
+            g2.setColor(Theme.TEXT);
+            Font f = getFont().deriveFont(Font.BOLD, size * 0.30f);
+            g2.setFont(f);
+            FontMetrics fm = g2.getFontMetrics();
+            int tx = getWidth()/2 - fm.stringWidth(initials)/2;
+            int ty = getHeight()/2 + fm.getAscent()/2 - 6;
+            g2.drawString(initials, tx, ty);
+        }
+        g2.dispose();
+    }
+}
+
+/** Top semicircle gauge (∩) */
+class MiniGauge extends JComponent
+{
+    private final int value; // 0..100
+    MiniGauge(int value)
+    {
+        this.value = Math.max(0, Math.min(100, value));
+        setPreferredSize(new Dimension(64, 44));
+        setMinimumSize(new Dimension(64, 44));
+    }
+    @Override protected void paintComponent(Graphics g)
+    {
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        int w = getWidth(), h = getHeight();
+        int padX = 6, padY = 6; float stroke = Theme.GAUGE_STROKE; int safety = 2;
+
+        int maxBoxW = w - padX*2 - (int)stroke;
+        int maxBoxH = h - padY*2 - (int)stroke - safety;
+        int box = Math.max(10, Math.min(maxBoxW, maxBoxH));
+
+        int x = padX + (int)(stroke/2f);
+        int y = padY + (int)(stroke/2f) + safety;
+
+        g2.setStroke(new BasicStroke(stroke, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        g2.setColor(Theme.TRACK); g2.drawArc(x, y, box, box, 180, -180);
+        g2.setColor(UiColors.colorForValue(value));
+        int sweep = (int)Math.round(180 * (value / 100.0));
+        g2.drawArc(x, y, box, box, 180, -sweep);
+        g2.dispose();
+    }
+}
+
+/** Category card with title, gauge, sub stat grid, and editable button */
+class StatCard extends JPanel
+{
+    private final StatCategory cat;
+    private final Player owner;
+    private final JLabel overallLbl; // updated after edits
+
+    StatCard(StatCategory cat, Player owner)
+    {
+        this.cat = cat;
+        this.owner = owner;
+
+        setOpaque(false);
+        setLayout(new BorderLayout());
+        setBorder(new EmptyBorder(12, 12, 12, 12));
+
+        JPanel card = new JPanel(new BorderLayout());
+        card.setBackground(Theme.CARD_BG);
+        card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Theme.CARD_BORDER),
+                new EmptyBorder(12, 12, 12, 12)
+        ));
+
+        // Header: title on left, gauge + overall + edit button on right
+        JPanel header = new JPanel(new BorderLayout());
+        header.setOpaque(false);
+
+        JLabel title = new JLabel(cat.name.toUpperCase());
+        title.setForeground(Theme.TEXT);
+        title.setFont(title.getFont().deriveFont(Font.BOLD, 14f));
+        header.add(title, BorderLayout.WEST);
+
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
+        right.setOpaque(false);
+        right.add(new MiniGauge(cat.overall));
+
+        overallLbl = new JLabel(String.valueOf(cat.overall));
+        overallLbl.setForeground(Theme.TEXT);
+        overallLbl.setFont(overallLbl.getFont().deriveFont(Font.BOLD, 14f));
+        right.add(overallLbl);
+
+        JButton edit = new JButton("✏");
+        edit.setMargin(new Insets(2, 6, 2, 6));
+        edit.setFocusable(false);
+        edit.setToolTipText("Edit this category's sub-stats");
+        edit.addActionListener(e -> editSubstatAndSave());
+        right.add(edit);
+
+        header.add(right, BorderLayout.EAST);
+
+        // Grid of sub stats
+        JPanel grid = new JPanel(new GridLayout(0, 2, 8, 6));
+        grid.setOpaque(false);
+        for (SubStat s : cat.subStats)
+        {
+            JLabel left = new JLabel(s.name);
+            left.setForeground(new Color(198, 206, 217));
+
+            JLabel rightStat = new JLabel(String.valueOf(s.value));
+            rightStat.setHorizontalAlignment(SwingConstants.RIGHT);
+            rightStat.setForeground(UiColors.colorForValue(s.value));
+
+            grid.add(left);
+            grid.add(rightStat);
+        }
+
+        card.add(header, BorderLayout.NORTH);
+        card.add(Box.createVerticalStrut(6), BorderLayout.CENTER);
+        card.add(grid, BorderLayout.SOUTH);
+        add(card, BorderLayout.CENTER);
+    }
+
+    private void editSubstatAndSave()
+    {
+        if (cat.subStats == null || cat.subStats.isEmpty())
+        {
+            JOptionPane.showMessageDialog(this, "This category has no sub-stats to edit.", "No Data", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        String[] names = new String[cat.subStats.size()];
+        for (int i = 0; i < cat.subStats.size(); i++)
+            names[i] = cat.subStats.get(i).name;
+
+        String choice = (String) JOptionPane.showInputDialog(
+                this,
+                "Choose a sub-stat to edit:",
+                "Edit Sub-Stat",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                names,
+                names[0]
+        );
+        if (choice == null) return; // cancelled
+
+        SubStat target = null;
+        for (SubStat s : cat.subStats)
+        {
+            if (s.name.equals(choice)) { target = s; break; }
+        }
+        if (target == null) return;
+
+        String input = JOptionPane.showInputDialog(
+                this,
+                "Enter new value for " + target.name + " (0–100):",
+                target.value
+        );
+        if (input == null) return; // cancelled
+
+        input = input.trim();
+        int newVal;
+        try
+        {
+            newVal = Integer.parseInt(input);
+        }
+        catch (NumberFormatException ex)
+        {
+            JOptionPane.showMessageDialog(this, "Please enter a whole number.", "Invalid Input", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (newVal < 0 || newVal > 100)
+        {
+            JOptionPane.showMessageDialog(this, "Value must be between 0 and 100.", "Out of Range", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // apply change
+        target.value = newVal;
+
+        // recompute overall as average of sub stats (rounded)
+        int sum = 0;
+        for (SubStat s : cat.subStats) sum += s.value;
+        cat.overall = Math.round(sum / (float) cat.subStats.size());
+
+        // persist to CSV and refresh UI
+        PlayerDataLoader.saveToCSV(owner, "data/player_data.csv");
+        overallLbl.setText(String.valueOf(cat.overall));
+        revalidate();
+        repaint();
+        SwingUtilities.getWindowAncestor(this).repaint();
+    }
+}

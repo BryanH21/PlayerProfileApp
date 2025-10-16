@@ -1,0 +1,29 @@
+Category,SubStat,Value
+Pace,Acceleration,92
+Pace,Sprint Speed,91
+Shooting,Positioning,80
+Shooting,Finishing,82
+Shooting,Shot Power,84
+Shooting,Long Shots,71
+Shooting,Volleys,74
+Shooting,Penalties,71
+Passing,Vision,70
+Passing,Crossing,72
+Passing,Free Kick,54
+Passing,Short Passing,75
+Passing,Long Passing,58
+Passing,Curve,75
+Dribbling,Agility,86
+Dribbling,Balance,85
+Dribbling,Reactions,81
+Dribbling,Ball Control,84
+Dribbling,Dribbling,89
+Defending,Interceptions,42
+Defending,Heading,72
+Defending,Marking,35
+Defending,Standing Tackle,39
+Defending,Sliding Tackle,38
+Physical,Jumping,81
+Physical,Stamina,80
+Physical,Strength,80
+Physical,Aggression,62

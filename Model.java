@@ -37,7 +37,7 @@ class Player
 class StatCategory
 {
     final String name;
-    final int overall;
+    int overall; // made editable for UI updates
     final List<SubStat> subStats;
 
     public StatCategory(String name, int overall, List<SubStat> subStats)
@@ -55,7 +55,7 @@ class StatCategory
 class SubStat
 { 
     final String name;
-    final int value;
+    int value; // made editable for UI updates
 
     public SubStat(String name, int value)
     {

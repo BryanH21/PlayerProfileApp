@@ -29,6 +29,11 @@ public class PlayerProfileApp extends JFrame
     {
         SwingUtilities.invokeLater(() -> 
         {
+            Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(null, e.toString(), "Uncaught error", JOptionPane.ERROR_MESSAGE);
+            });
+            System.out.println("[APP] Launching PlayerProfileApp...");
             PlayerProfileApp app = new PlayerProfileApp();
             app.setVisible(true);
         });
@@ -37,18 +42,31 @@ public class PlayerProfileApp extends JFrame
     {
         super("Player Profile");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(420, 800);  // mobile feel
+        setSize(420, 800);  // make it feel like its a mobile version
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // MODEL (Example data)
-        Player player = samplePlayer();
-        // PAGES
-        JPanel homePage = new HomePage(player);
-        JPanel roadmapPage = placeholderPage("Roadmap (coming next)"); 
-        pages.add(homePage, "HOME");
-        pages.add(roadmapPage, "ROADMAP");
-        add(pages, BorderLayout.CENTER);
+        // MODEL: Try to load from CSV, fallback to sample data if not found/unreadable
+        System.out.println("[MODEL] Loading player from CSV...");
+        Player player = PlayerDataLoader.loadFromCSV("data/player_data.csv");
+        if (player == null) {
+            System.out.println("[MODEL] CSV load failed or missing. Using samplePlayer().");
+            player = samplePlayer();
+        } else {
+            System.out.println("[MODEL] Loaded player: " + player.name);
+        }
+        try {
+            System.out.println("[UI] Building pages...");
+            JPanel homePage = new HomePage(player);
+            JPanel roadmapPage = placeholderPage("Roadmap (coming next)");
+            pages.add(homePage, "HOME");
+            pages.add(roadmapPage, "ROADMAP");
+            add(pages, BorderLayout.CENTER);
+            System.out.println("[UI] Pages added.");
+        } catch (Throwable ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, ex.toString(), "UI Build Error", JOptionPane.ERROR_MESSAGE);
+        }
 
         // NAV BAR
         BottomNav nav = new BottomNav("HOME", sel -> 
@@ -56,6 +74,10 @@ public class PlayerProfileApp extends JFrame
             cardLayout.show(pages, sel);
         });
         add(nav, BorderLayout.SOUTH);
+
+        revalidate();
+        repaint();
+        System.out.println("[APP] UI ready. Window should be visible.");
     }
 
     private JPanel placeholderPage(String text) 
@@ -68,241 +90,7 @@ public class PlayerProfileApp extends JFrame
         p.add(lbl, BorderLayout.CENTER);
         return p;
     }
-    // HOME PAGE
-    static class HomePage extends JPanel 
-    {
-        public HomePage(Player player) 
-        {
-            setLayout(new BorderLayout());
-            setBackground(Theme.DARK_BG); // dark theme.. to be changed later into my business colors after project is over
 
-            // Header with circular avatar + name
-            JPanel header = new JPanel();
-            header.setOpaque(false);
-            header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
-            header.setBorder(new EmptyBorder(24, 24, 8, 24));
-            Avatar avatar = new Avatar(player.getDisplayInitials(), player.getPhotoPath());
-            avatar.setAlignmentX(Component.CENTER_ALIGNMENT);
-            JLabel name = new JLabel(player.name);
-            name.setAlignmentX(Component.CENTER_ALIGNMENT);
-            name.setForeground(Theme.TEXT);
-            name.setFont(name.getFont().deriveFont(Font.BOLD, 22f));
-            JLabel subtitle = new JLabel("Updated " + LocalDate.now());
-            subtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
-            subtitle.setForeground(Theme.SUBTEXT);
-            subtitle.setFont(subtitle.getFont().deriveFont(12f));
-            header.add(avatar);
-            header.add(Box.createVerticalStrut(12));
-            header.add(name);
-            header.add(subtitle);
-
-            // Scrollable stats 
-            JPanel statsList = new JPanel();
-            statsList.setOpaque(false);
-            statsList.setLayout(new BoxLayout(statsList, BoxLayout.Y_AXIS));
-            statsList.setBorder(new EmptyBorder(8, 16, 80, 16)); // bottom space above nav
-            for (StatCategory cat : player.categories) 
-            {
-                statsList.add(new StatCard(cat));
-                statsList.add(Box.createVerticalStrut(12));
-            }
-            JScrollPane scroll = new JScrollPane(statsList);
-            scroll.setBorder(null);
-            scroll.getVerticalScrollBar().setUnitIncrement(16);
-            scroll.setOpaque(false);
-            scroll.getViewport().setOpaque(false);
-            add(header, BorderLayout.NORTH);
-            add(scroll, BorderLayout.CENTER);
-        }
-    }
-
-    // UI: Avatar 
-    static class Avatar extends JComponent 
-    {
-        private final String initials;
-        private BufferedImage image;
-        public Avatar(String initials, String imagePath) 
-        {
-            this.initials = initials;
-            setPreferredSize(new Dimension(128, 128));
-            if (imagePath != null) 
-            {
-                try 
-                {
-                    image = ImageIO.read(new File(imagePath));
-                }
-                catch (IOException ex) 
-                {
-                    System.err.println("Avatar load failed: " + imagePath + " (" + ex.getMessage() + ")");
-                    // fallback to initials
-                }
-            }
-            // Fallback: try to load /profile.jpg from classpath if not already loaded
-            if (image == null) 
-            {
-                try 
-                {
-                    java.io.InputStream in = getClass().getResourceAsStream("/profile.jpg");
-                    if (in != null) 
-                    {
-                        image = ImageIO.read(in);
-                    }
-                }
-                catch (IOException ex) 
-                {
-                    System.err.println("Resource avatar load failed: " + ex.getMessage());
-                }
-            }
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) 
-        {
-            // Omit super.paintComponent(g); avatar fully repaints its background/clip intentionally.
-            Graphics2D g2 = (Graphics2D) g.create();
-            int size = Math.min(getWidth(), getHeight());
-            int x = (getWidth() - size) / 2;
-            int y = (getHeight() - size) / 2;
-
-            // Outer ring
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(Theme.GOLD);
-            g2.fillOval(x, y, size, size);
-
-            int inset = 6;
-            Shape clip = new Ellipse2D.Float(x + inset, y + inset, size - 2*inset, size - 2*inset);
-            g2.setClip(clip);
-
-            if (image != null) 
-            {
-                g2.drawImage(image, x + inset, y + inset, size - 2*inset, size - 2*inset, null);
-            } 
-            else 
-            {
-                g2.setColor(new Color(35, 41, 54));
-                g2.fillOval(x + inset, y + inset, size - 2*inset, size - 2*inset);
-                g2.setClip(null);
-                g2.setColor(Theme.TEXT);
-                Font f = getFont().deriveFont(Font.BOLD, size * 0.30f);
-                g2.setFont(f);
-                FontMetrics fm = g2.getFontMetrics();
-                int tx = getWidth()/2 - fm.stringWidth(initials)/2;
-                int ty = getHeight()/2 + fm.getAscent()/2 - 6;
-                g2.drawString(initials, tx, ty);
-            }
-            g2.dispose();
-        }
-    }
-
-    // UI; Stat Card 
-    static class StatCard extends JPanel 
-    {
-        public StatCard(StatCategory cat) 
-        {
-            setOpaque(false);
-            setLayout(new BorderLayout());
-            setBorder(new EmptyBorder(12, 12, 12, 12));
-
-            JPanel card = new JPanel(new BorderLayout());
-            card.setBackground(Theme.CARD_BG);
-            card.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(Theme.CARD_BORDER),
-                    new EmptyBorder(12, 12, 12, 12)
-            ));
-
-            // Header: Category Name + Gauge + Overall 
-            JPanel header = new JPanel(new BorderLayout());
-            header.setOpaque(false);
-
-            JLabel title = new JLabel(cat.name.toUpperCase());
-            title.setForeground(Theme.TEXT);
-            title.setFont(title.getFont().deriveFont(Font.BOLD, 14f));
-
-            header.add(title, BorderLayout.WEST);
-
-            // Composite right side: gauge left, number right
-            JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
-            right.setOpaque(false);
-
-            MiniGauge gauge = new MiniGauge(cat.overall);
-            JLabel overallLbl = new JLabel(String.valueOf(cat.overall));
-            overallLbl.setForeground(Theme.TEXT);
-            overallLbl.setFont(overallLbl.getFont().deriveFont(Font.BOLD, 14f));
-
-            right.add(gauge); // gauge on the left
-            right.add(overallLbl); // number on the right
-
-            header.add(right, BorderLayout.EAST);
-
-            // Sub stats grid
-            JPanel grid = new JPanel(new GridLayout(0, 2, 8, 6));
-            grid.setOpaque(false);
-            for (SubStat s : cat.subStats) 
-            {
-                JLabel left = new JLabel(s.name);
-                left.setForeground(new Color(198, 206, 217));
-                JLabel rightStat = new JLabel(String.valueOf(s.value));
-                rightStat.setHorizontalAlignment(SwingConstants.RIGHT);
-                rightStat.setForeground(UiColors.colorForValue(s.value));
-                grid.add(left);
-                grid.add(rightStat);
-            }
-
-            card.add(header, BorderLayout.NORTH);
-            card.add(Box.createVerticalStrut(6), BorderLayout.CENTER);
-            card.add(grid, BorderLayout.SOUTH);
-            add(card, BorderLayout.CENTER);
-        }
-    }
-
-    static class MiniGauge extends JComponent 
-    {
-        private final int value; // 0-99
-
-        public MiniGauge(int value)
-        {
-            this.value = Math.max(0, Math.min(100, value));
-            setPreferredSize(new Dimension(64, 44));
-            setMinimumSize(new Dimension(64, 44));
-        }
-
-        @Override
-        protected void paintComponent(Graphics g)
-        {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            int w = getWidth();
-            int h = getHeight();
-
-            // Internal padding
-            int padX = 6;
-            int padY = 6;
-
-            // Stroke thickness and avoid clipping
-            float stroke = 6f;
-            int safety = 2;
-            int maxBoxW = w - padX * 2 - (int) stroke;           // leave room for stroke
-            int maxBoxH = h - padY * 2 - (int) stroke - safety;  // leave room for stroke + safety
-            int box = Math.max(10, Math.min(maxBoxW, maxBoxH));  // square size that fits (finally!!)
-
-            int x = padX + (int)(stroke / 2f);
-            int y = padY + (int)(stroke / 2f) + safety; // push down so the top isnt out of frame
-
-            // Apply stroke
-            g2.setStroke(new BasicStroke(stroke, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-
-            // Background arc 
-            g2.setColor(Theme.TRACK);
-            g2.drawArc(x, y, box, box, 180, -180);
-
-            // Value arc
-            g2.setColor(UiColors.colorForValue(value));
-            int sweep = (int) Math.round(180 * (value / 100.0));
-            g2.drawArc(x, y, box, box, 180, -sweep);
-
-            g2.dispose();
-        }
-    }
 
     // Navigation
     static class BottomNav extends JPanel 
