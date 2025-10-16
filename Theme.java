@@ -9,6 +9,8 @@ import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Contains all theme related constants and UI helper methods 
@@ -109,12 +111,16 @@ class Avatar extends JComponent
 /** Top semicircle gauge (∩) */
 class MiniGauge extends JComponent
 {
-    private final int value; // 0..100
+    private int value; // 0..100
     MiniGauge(int value)
     {
         this.value = Math.max(0, Math.min(100, value));
         setPreferredSize(new Dimension(64, 44));
         setMinimumSize(new Dimension(64, 44));
+    }
+    void setValue(int v) {
+        this.value = Math.max(0, Math.min(100, v));
+        repaint();
     }
     @Override protected void paintComponent(Graphics g)
     {
@@ -145,6 +151,8 @@ class StatCard extends JPanel
     private final StatCategory cat;
     private final Player owner;
     private final JLabel overallLbl; // updated after edits
+    private final MiniGauge gauge; // NEW: keep reference to update after edits
+    private final Map<String, JLabel> subValueLabels = new HashMap<>(); // NEW: substat name -> label
 
     StatCard(StatCategory cat, Player owner)
     {
@@ -173,7 +181,8 @@ class StatCard extends JPanel
 
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
         right.setOpaque(false);
-        right.add(new MiniGauge(cat.overall));
+        gauge = new MiniGauge(cat.overall);
+        right.add(gauge);
 
         overallLbl = new JLabel(String.valueOf(cat.overall));
         overallLbl.setForeground(Theme.TEXT);
@@ -203,6 +212,7 @@ class StatCard extends JPanel
 
             grid.add(left);
             grid.add(rightStat);
+            subValueLabels.put(s.name, rightStat);
         }
 
         card.add(header, BorderLayout.NORTH);
@@ -268,13 +278,27 @@ class StatCard extends JPanel
         // apply change
         target.value = newVal;
 
+        JLabel lbl = subValueLabels.get(target.name);
+        if (lbl != null) {
+            lbl.setText(String.valueOf(target.value));
+            lbl.setForeground(UiColors.colorForValue(target.value));
+        }
+
         // recompute overall as average of sub stats (rounded)
         int sum = 0;
         for (SubStat s : cat.subStats) sum += s.value;
         cat.overall = Math.round(sum / (float) cat.subStats.size());
+        gauge.setValue(cat.overall);
 
         // persist to CSV and refresh UI
         PlayerDataLoader.saveToCSV(owner, "data/player_data.csv");
+        // LIVE RELOAD: read back from CSV and sync in-memory model so app state matches file
+        Player reloaded = PlayerDataLoader.loadFromCSV("data/player_data.csv");
+        if (reloaded != null && reloaded.categories != null) {
+            // categories list in Player is final reference but mutable; replace contents
+            owner.categories.clear();
+            owner.categories.addAll(reloaded.categories);
+        }
         overallLbl.setText(String.valueOf(cat.overall));
         revalidate();
         repaint();
