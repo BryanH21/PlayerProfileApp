@@ -43,6 +43,14 @@ class RoadmapPage extends JPanel
             JProgressBar bar = new JProgressBar(0, 100);
             bar.setValue(g.progress());
             bar.setStringPainted(true);
+            bar.setForeground(Theme.GOLD);           // fill color
+            bar.setBackground(Theme.CARD_BG);        // track color
+            bar.setOpaque(true);
+            bar.setFont(bar.getFont().deriveFont(Font.BOLD, 12f));
+            bar.setUI(new javax.swing.plaf.basic.BasicProgressBarUI() {
+                @Override protected java.awt.Color getSelectionForeground() { return java.awt.Color.WHITE; }
+                @Override protected java.awt.Color getSelectionBackground() { return java.awt.Color.WHITE; }
+            });
             row.add(bar, BorderLayout.EAST);
             goalsPanel.add(row);
             goalsPanel.add(Box.createVerticalStrut(8));

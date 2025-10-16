@@ -64,6 +64,7 @@ public class PlayerProfileApp extends JFrame
             pages.add(homePage, "HOME");
             pages.add(roadmapPage, "ROADMAP");
             add(pages, BorderLayout.CENTER);
+            cardLayout.show(pages, "ROADMAP");
             System.out.println("[UI] Pages added.");
         } catch (Throwable ex) {
             ex.printStackTrace();
@@ -73,6 +74,7 @@ public class PlayerProfileApp extends JFrame
         // NAV BAR
         BottomNav nav = new BottomNav("HOME", sel -> 
         {
+            System.out.println("[NAV] switch to " + sel);
             cardLayout.show(pages, sel);
         });
         add(nav, BorderLayout.SOUTH);
