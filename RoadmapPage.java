@@ -17,6 +17,7 @@ class RoadmapPage extends JPanel
         this.sessions = sessions;
         setLayout(new BorderLayout());
         setBackground(Theme.DARK_BG);
+        System.out.println("[ROADMAP] Building M/W/F schedule page");
 
         //Goals list
         JPanel goalsPanel = new JPanel();
@@ -55,47 +56,66 @@ class RoadmapPage extends JPanel
             goalsPanel.add(row);
             goalsPanel.add(Box.createVerticalStrut(8));
         }
-        // Heatmap (Chapter 8: 2D array + nested loops)
-        JPanel heatmapCard = new JPanel(new BorderLayout());
-        heatmapCard.setOpaque(false);
-        heatmapCard.setBorder(new EmptyBorder(8, 16, 16, 16));
-        JPanel inner = new JPanel();
-        inner.setBackground(Theme.CARD_BG);
-        inner.setBorder(BorderFactory.createCompoundBorder(
+        // Weekly Focus (Mon / Wed / Fri) with three 5‑minute activities per day
+        JPanel scheduleCard = new JPanel(new BorderLayout());
+        scheduleCard.setOpaque(false);
+        scheduleCard.setBorder(new EmptyBorder(8, 16, 16, 16));
+
+        JPanel schedInner = new JPanel(new BorderLayout());
+        schedInner.setBackground(Theme.CARD_BG);
+        schedInner.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(Theme.CARD_BORDER),
             new EmptyBorder(12, 12, 12, 12)
         ));
-        inner.setLayout(new BorderLayout());
-        JLabel heatTitle = new JLabel("Training Heatmap (Weeks × Days)");
-        heatTitle.setForeground(Theme.TEXT);
-        heatTitle.setFont(heatTitle.getFont().deriveFont(Font.BOLD, 14f));
-        inner.add(heatTitle, BorderLayout.NORTH);
-        JPanel grid = new JPanel(new GridLayout(sessions.length, sessions[0].length, 4, 4));
-        grid.setOpaque(false);
 
-        // Nested loops over 2D array (Chapter 8)
-        for (int w = 0; w < sessions.length; w++) {
-            for (int d = 0; d < sessions[w].length; d++) {
-                int val = sessions[w][d]; // minutes
-                JLabel cell = new JLabel(String.valueOf(val), SwingConstants.CENTER);
-                cell.setOpaque(true);
-                // simple shading by value
-                int shade = Math.min(255, 60 + (val * 3));
-                cell.setBackground(new Color(28,36,51, 255));
-                cell.setForeground(new Color(shade, shade, shade));
-                cell.setBorder(BorderFactory.createLineBorder(Theme.CARD_BORDER));
-                grid.add(cell);
+        JLabel schedTitle = new JLabel("Weekly Focus (Mon/Wed/Fri) — v2");
+        schedTitle.setForeground(Theme.TEXT);
+        schedTitle.setFont(schedTitle.getFont().deriveFont(Font.BOLD, 14f));
+        schedInner.add(schedTitle, BorderLayout.NORTH);
+
+        // Arrays + nested loops (Chapter 8): days and 3 activities per day
+        String[] days = {"Monday", "Wednesday", "Friday"};
+        String[][] activities = {
+            {"Dribbling Cones", "Wall Passes", "Ball Mastery"},
+            {"Sprint Intervals", "Plyo Hops", "Core Plank"},
+            {"First Touch", "Cross & Finish", "Cooldown Jog"}
+        };
+        int minutesPerTask = 5;
+
+        JPanel cols = new JPanel(new GridLayout(1, days.length, 12, 0));
+        cols.setOpaque(false);
+
+        for (int i = 0; i < days.length; i++) {
+            JPanel col = new JPanel();
+            col.setOpaque(false);
+            col.setLayout(new BoxLayout(col, BoxLayout.Y_AXIS));
+
+            JLabel dayLbl = new JLabel(days[i]);
+            dayLbl.setForeground(Theme.TEXT);
+            dayLbl.setFont(dayLbl.getFont().deriveFont(Font.BOLD, 13f));
+            dayLbl.setBorder(new EmptyBorder(0, 0, 6, 0));
+            col.add(dayLbl);
+
+            for (int j = 0; j < activities[i].length; j++) {
+                String line = "\u2022 " + activities[i][j] + " — " + minutesPerTask + " min";
+                JLabel item = new JLabel(line);
+                item.setForeground(new Color(198, 206, 217));
+                item.setBorder(new EmptyBorder(2, 0, 2, 0));
+                col.add(item);
             }
+
+            cols.add(col);
         }
-        inner.add(grid, BorderLayout.CENTER);
-        heatmapCard.add(inner, BorderLayout.CENTER);
+
+        schedInner.add(cols, BorderLayout.CENTER);
+        scheduleCard.add(schedInner, BorderLayout.CENTER);
 
         //Compose page
         JPanel content = new JPanel();
         content.setOpaque(false);
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
         content.add(goalsPanel);
-        content.add(heatmapCard);
+        content.add(scheduleCard);
         JScrollPane scroll = new JScrollPane(content);
         scroll.setBorder(null);
         scroll.getViewport().setOpaque(false);
