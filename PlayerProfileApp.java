@@ -29,7 +29,8 @@ public class PlayerProfileApp extends JFrame
     {
         SwingUtilities.invokeLater(() -> 
         {
-            Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+            Thread.setDefaultUncaughtExceptionHandler((t, e) -> 
+            {
                 e.printStackTrace();
                 JOptionPane.showMessageDialog(null, e.toString(), "Uncaught error", JOptionPane.ERROR_MESSAGE);
             });

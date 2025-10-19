@@ -1,3 +1,4 @@
+//Bryan Hernandez
 // scrollable player profile screen (header + stat cards)
 
 import javax.swing.*;
@@ -13,7 +14,7 @@ class HomePage extends JPanel
         setLayout(new BorderLayout());
         setBackground(Theme.DARK_BG);
 
-        // Header (avatar + name + date)
+        // Header (avatar, name, date)
         JPanel header = new JPanel();
         header.setOpaque(false);
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));

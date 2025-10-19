@@ -1,3 +1,4 @@
+//Bryan Hernandez
 //shows goals + training heatmap
 
 import javax.swing.*;
@@ -8,7 +9,7 @@ import java.util.List;
 
 class RoadmapPage extends JPanel
 {
-    // 2D array (weeks x days) for Chapter 8
+    // 2D array for Chapter 8
     private final int[][] sessions; // minutes trained per day
     private final List<Goal> goals;
     RoadmapPage(List<Goal> goals, int[][] sessions)
@@ -44,8 +45,8 @@ class RoadmapPage extends JPanel
             JProgressBar bar = new JProgressBar(0, 100);
             bar.setValue(g.progress());
             bar.setStringPainted(true);
-            bar.setForeground(Theme.GOLD);           // fill color
-            bar.setBackground(Theme.CARD_BG);        // track color
+            bar.setForeground(Theme.GOLD);           
+            bar.setBackground(Theme.CARD_BG);        
             bar.setOpaque(true);
             bar.setFont(bar.getFont().deriveFont(Font.BOLD, 12f));
             bar.setUI(new javax.swing.plaf.basic.BasicProgressBarUI() {
@@ -56,7 +57,7 @@ class RoadmapPage extends JPanel
             goalsPanel.add(row);
             goalsPanel.add(Box.createVerticalStrut(8));
         }
-        // Weekly Focus (Mon / Wed / Fri) with three 5‑minute activities per day
+        //Weekly Focus (Mon,Wed,Fri) with three 5 minute activities per day
         JPanel scheduleCard = new JPanel(new BorderLayout());
         scheduleCard.setOpaque(false);
         scheduleCard.setBorder(new EmptyBorder(8, 16, 16, 16));
@@ -85,7 +86,8 @@ class RoadmapPage extends JPanel
         JPanel cols = new JPanel(new GridLayout(1, days.length, 12, 0));
         cols.setOpaque(false);
 
-        for (int i = 0; i < days.length; i++) {
+        for (int i = 0; i < days.length; i++) 
+        {
             JPanel col = new JPanel();
             col.setOpaque(false);
             col.setLayout(new BoxLayout(col, BoxLayout.Y_AXIS));
@@ -96,7 +98,8 @@ class RoadmapPage extends JPanel
             dayLbl.setBorder(new EmptyBorder(0, 0, 6, 0));
             col.add(dayLbl);
 
-            for (int j = 0; j < activities[i].length; j++) {
+            for (int j = 0; j < activities[i].length; j++) 
+            {
                 String line = "\u2022 " + activities[i][j] + " — " + minutesPerTask + " min";
                 JLabel item = new JLabel(line);
                 item.setForeground(new Color(198, 206, 217));
@@ -130,16 +133,5 @@ class RoadmapPage extends JPanel
         list.add(new TrainingGoal("Finish 5/5 Dribbling Drills", "In Progress", 5, 3));
         list.add(new TrainingGoal("Cardio 100 min this week", "Not Started", 100, 0));
         return list;
-    }
-    static int[][] sampleSessions()
-    {
-        // 5 weeks × 7 days (In realworld this would be different)
-        return new int[][] {
-           {10,  0, 20,  0,  0, 30,  0},
-           { 0, 15,  0,  0, 25,  0,  0},
-           { 5,  0,  0, 10,  0, 20,  0},
-           { 0, 10, 10,  0,  0, 25,  0},
-           {15,  0,  0, 15,  0,  0, 30}
-        };
     }
 }

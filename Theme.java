@@ -156,8 +156,8 @@ class StatCard extends JPanel
     private final StatCategory cat;
     private final Player owner;
     private final JLabel overallLbl; // updated after edits
-    private final MiniGauge gauge; // NEW: keep reference to update after edits
-    private final Map<String, JLabel> subValueLabels = new HashMap<>(); // NEW: substat name -> label
+    private final MiniGauge gauge; //keep reference to update after edits
+    private final Map<String, JLabel> subValueLabels = new HashMap<>(); 
 
     StatCard(StatCategory cat, Player owner)
     {
@@ -294,19 +294,16 @@ class StatCard extends JPanel
             lbl.setText(String.valueOf(target.value));
             lbl.setForeground(UiColors.colorForValue(target.value));
         }
-
-        // recompute overall as average of sub stats (rounded)
         int sum = 0;
         for (SubStat s : cat.subStats) sum += s.value;
         cat.overall = Math.round(sum / (float) cat.subStats.size());
         gauge.setValue(cat.overall);
-
         // persist to CSV and refresh UI
         PlayerDataLoader.saveToCSV(owner, "data/player_data.csv");
-        // LIVE RELOAD: read back from CSV and sync in-memory model so app state matches file
+        // LIVE RELOAD: read back from CSV and sync in memory model so app state matches file
         Player reloaded = PlayerDataLoader.loadFromCSV("data/player_data.csv");
-        if (reloaded != null && reloaded.categories != null) {
-            // categories list in Player is final reference but mutable; replace contents
+        if (reloaded != null && reloaded.categories != null) 
+        {
             owner.categories.clear();
             owner.categories.addAll(reloaded.categories);
         }

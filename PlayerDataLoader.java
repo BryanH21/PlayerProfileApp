@@ -3,14 +3,17 @@
 import java.io.*;
 import java.util.*;
 
-class PlayerDataLoader {
+class PlayerDataLoader 
+{
 
-    static Player loadFromCSV(String playerPath) {
+    static Player loadFromCSV(String playerPath) 
+    {
         Player player = null;
         List<StatCategory> cats = new ArrayList<>();
 
         // Load player data (overall categories)
-        try (BufferedReader reader = new BufferedReader(new FileReader(playerPath))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(playerPath)))
+        {
             String header = reader.readLine();
             String line = reader.readLine();
             if (line != null) {
@@ -27,7 +30,8 @@ class PlayerDataLoader {
 
                 player = new Player(name, photo, cats);
             }
-        } catch (IOException e) {
+        } catch (IOException e) 
+        {
             System.err.println("Error reading player file: " + e.getMessage());
             return null;
         }
@@ -41,7 +45,8 @@ class PlayerDataLoader {
             Map<String, StatCategory> byName = new HashMap<>();
             for (StatCategory c : cats) byName.put(c.name, c);
 
-            try (BufferedReader br = new BufferedReader(new FileReader(subFile))) {
+            try (BufferedReader br = new BufferedReader(new FileReader(subFile))) 
+            {
                 String header = br.readLine(); // skip header
                 System.out.println("[DATA] Reading substats.csv...");
                 String row;
@@ -74,7 +79,8 @@ class PlayerDataLoader {
         return player;
     }
 
-    static void saveToCSV(Player player, String playerPath) {
+    static void saveToCSV(Player player, String playerPath) 
+    {
         // Save category overalls back to player_data.csv
         try (PrintWriter writer = new PrintWriter(new FileWriter(playerPath))) {
             writer.println("Name,PhotoPath,Pace,Shooting,Passing,Dribbling,Defending,Physical");
