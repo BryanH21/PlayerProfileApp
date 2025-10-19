@@ -4,15 +4,10 @@
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.geom.Ellipse2D;
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import javax.imageio.ImageIO;
 
 /* 
  * PlayerProfileApp
@@ -60,8 +55,7 @@ public class PlayerProfileApp extends JFrame
             System.out.println("[UI] Building pages...");
             JPanel homePage = new HomePage(player);
             java.util.List<Goal> goals = RoadmapPage.sampleGoals();
-            int[][] sessions = RoadmapPage.sampleSessions();
-            JPanel roadmapPage = new RoadmapPage(goals, sessions);
+            JPanel roadmapPage = new RoadmapPage(goals, null);
             pages.add(homePage, "HOME");
             pages.add(roadmapPage, "ROADMAP");
             add(pages, BorderLayout.CENTER);

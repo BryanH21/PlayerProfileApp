@@ -1,5 +1,5 @@
 //Bryan Hernandez
-//shows goals + training heatmap
+// shows goals + M/W/F schedule (arrays + nested loops)
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -10,12 +10,10 @@ import java.util.List;
 class RoadmapPage extends JPanel
 {
     // 2D array for Chapter 8
-    private final int[][] sessions; // minutes trained per day
     private final List<Goal> goals;
     RoadmapPage(List<Goal> goals, int[][] sessions)
     {
         this.goals = goals;
-        this.sessions = sessions;
         setLayout(new BorderLayout());
         setBackground(Theme.DARK_BG);
         System.out.println("[ROADMAP] Building M/W/F schedule page");
@@ -69,7 +67,7 @@ class RoadmapPage extends JPanel
             new EmptyBorder(12, 12, 12, 12)
         ));
 
-        JLabel schedTitle = new JLabel("Weekly Focus (Mon/Wed/Fri) — v2");
+        JLabel schedTitle = new JLabel("Weekly Focus (Mon/Wed/Fri)");
         schedTitle.setForeground(Theme.TEXT);
         schedTitle.setFont(schedTitle.getFont().deriveFont(Font.BOLD, 14f));
         schedInner.add(schedTitle, BorderLayout.NORTH);
@@ -117,8 +115,8 @@ class RoadmapPage extends JPanel
         JPanel content = new JPanel();
         content.setOpaque(false);
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
-        content.add(goalsPanel);
         content.add(scheduleCard);
+        content.add(goalsPanel);
         JScrollPane scroll = new JScrollPane(content);
         scroll.setBorder(null);
         scroll.getViewport().setOpaque(false);
